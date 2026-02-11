@@ -1,2 +1,105 @@
-<h1> SNIPE X </h1>
-<p> prueba de la siguiente accion en negro </p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SNIPE X Aerospace | Portal Corporativo</title>
+  <link rel="stylesheet" href="SNIPEXCSS.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">SNIPE <span>X</span> AEROSPACE</div>
+    <nav>
+      <a href="#servicios">Servicios</a>
+      <a href="#portal">Portal</a>
+      <a href="#admin">Admin</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Ingeniería · Satélites · Misión crítica</p>
+        <h1>Plataforma empresarial para operaciones aeroespaciales</h1>
+        <p>
+          Diseñada para empresas que necesitan trazabilidad de proyectos, acceso por cuentas y control administrativo centralizado.
+        </p>
+      </div>
+      <div class="hero-panel">
+        <h3>Credenciales demo</h3>
+        <p><strong>Admin:</strong> admin@snipex.aero</p>
+        <p><strong>Clave:</strong> SnipeAdmin2026!</p>
+      </div>
+    </section>
+
+    <section id="servicios" class="section">
+      <h2>Ámbito empresarial aeroespacial</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Gestión de misión</h3>
+          <p>Planificación de fases orbitales, control de riesgos y reportes de hitos para clientes corporativos.</p>
+        </article>
+        <article class="card">
+          <h3>Seguridad de acceso</h3>
+          <p>Registro e inicio de sesión con persistencia local para separar perfiles de usuario y administración.</p>
+        </article>
+        <article class="card">
+          <h3>Panel directivo</h3>
+          <p>Modo administrador para visualizar cuentas activas y estado operativo del portal.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="portal" class="section auth-grid">
+      <div class="panel">
+        <h2>Crear cuenta</h2>
+        <form id="registerForm">
+          <label for="regName">Nombre empresa/persona</label>
+          <input id="regName" required minlength="3" placeholder="Orbital Dynamics S.A." />
+
+          <label for="regEmail">Correo</label>
+          <input id="regEmail" type="email" required placeholder="equipo@empresa.com" />
+
+          <label for="regPassword">Contraseña</label>
+          <input id="regPassword" type="password" required minlength="8" placeholder="Mínimo 8 caracteres" />
+
+          <button type="submit">Registrar cuenta</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Iniciar sesión</h2>
+        <form id="loginForm">
+          <label for="loginEmail">Correo</label>
+          <input id="loginEmail" type="email" required />
+
+          <label for="loginPassword">Contraseña</label>
+          <input id="loginPassword" type="password" required />
+
+          <button type="submit">Entrar al portal</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="section panel" id="sessionPanel">
+      <h2>Estado de sesión</h2>
+      <p id="sessionState">No hay usuario autenticado.</p>
+      <button id="logoutBtn" class="secondary" disabled>Cerrar sesión</button>
+    </section>
+
+    <section id="admin" class="section panel admin-panel">
+      <h2>Admin mode</h2>
+      <p>Acceso restringido. Solo el usuario admin puede ver los datos.</p>
+      <ul id="adminList">
+        <li>Inicia sesión como admin para cargar cuentas registradas.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>SNIPE X Aerospace · Portal corporativo funcional</p>
+  </footer>
+
+  <script src="SNIPEXJS.js"></script>
+</body>
+</html>
