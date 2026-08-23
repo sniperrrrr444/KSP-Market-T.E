@@ -1,0 +1,24 @@
+const DEMO={price:125.40,shares:0,cash:10000,history:[118,119,117,121,120,122,124,123,125,124,126,125.4]};
+let state=JSON.parse(localStorage.getItem('kspExchangeState')||'null')||structuredClone(DEMO);
+const $=id=>document.getElementById(id); const money=n=>new Intl.NumberFormat('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)+' ₡';
+function save(){localStorage.setItem('kspExchangeState',JSON.stringify(state));updateUI()}
+function updateUI(){
+ $('stockPrice').textContent=money(state.price); $('modalPrice').textContent=money(state.price); $('balanceLabel').textContent=localStorage.getItem('kspUser')?`${localStorage.getItem('kspUser')} · ${money(state.cash)}`:`Demo · ${money(state.cash)}`;
+ $('portfolioCash').textContent=money(state.cash); $('shares').textContent=state.shares; $('positionValue').textContent=money(state.shares*state.price); $('portfolioTotal').textContent=money(state.cash+state.shares*state.price); $('tradeTotal').textContent=money((Number($('quantity').value)||0)*state.price); drawChart();
+}
+function drawChart(){const c=$('chart'),x=c.getContext('2d'),w=c.width,h=c.height,p=14,vals=state.history,min=Math.min(...vals)-2,max=Math.max(...vals)+2;x.clearRect(0,0,w,h);x.beginPath();vals.forEach((v,i)=>{const px=p+i*(w-p*2)/(vals.length-1),py=h-p-(v-min)/(max-min)*(h-p*2);i?x.lineTo(px,py):x.moveTo(px,py)});x.strokeStyle='#62d7a3';x.lineWidth=3;x.stroke();x.lineTo(w-p,h-p);x.lineTo(p,h-p);x.closePath();x.fillStyle='rgba(98,215,163,.08)';x.fill()}
+function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
+function openAuth(login=false){$('authModal').classList.remove('hidden');if(login){$('authContent').innerHTML=`<p class="eyebrow">KSP EXCHANGE</p><h2>Iniciar sesión</h2><p class="muted">Demo local: usa el usuario y contraseña creados en este navegador.</p><form id="loginForm"><label>Nombre de usuario<input id="loginUser" required autocomplete="username"></label><label>Contraseña<input id="loginPass" type="password" required autocomplete="current-password"></label><button class="buy full">Entrar</button></form><p class="switch">¿No tienes cuenta? <button id="showRegister" type="button">Regístrate</button></p>`;$('loginForm').onsubmit=e=>{e.preventDefault();const u=localStorage.getItem('kspUser'),p=localStorage.getItem('kspPass');if($('loginUser').value===u&&$('loginPass').value===p){$('authModal').classList.add('hidden');toast('Sesión iniciada');updateUI()}else toast('Usuario o contraseña incorrectos')};$('showRegister').onclick=()=>openAuth(false)}}
+$('accountBtn').onclick=()=>localStorage.getItem('kspUser')? (localStorage.removeItem('kspUser'),toast('Sesión cerrada'),updateUI()):openAuth(false);
+$('closeModal').onclick=()=>$('authModal').classList.add('hidden');$('closeTrade').onclick=()=>$('tradeModal').classList.add('hidden');
+$('showLogin').onclick=()=>openAuth(true);
+$('registerForm').onsubmit=e=>{e.preventDefault();localStorage.setItem('kspUser',$('username').value);localStorage.setItem('kspPass',$('password').value);$('authModal').classList.add('hidden');toast('Cuenta creada. ¡Bienvenido a KSP Exchange!');updateUI()};
+function openTrade(){$('tradeModal').classList.remove('hidden');$('quantity').value=1;updateUI()}
+$('buyBtn').onclick=openTrade;$('portfolioBuy').onclick=openTrade;$('quantity').oninput=updateUI;
+$('confirmBuy').onclick=()=>{const q=Math.floor(Number($('quantity').value));if(q<1)return;if(q*state.price>state.cash){toast('Saldo insuficiente');return}state.cash-=q*state.price;state.shares+=q;state.history.push(state.price);if(state.history.length>24)state.history.shift();$('tradeModal').classList.add('hidden');save();toast(`Compra realizada: ${q} acción${q>1?'es':''} de KD`)};
+$('sellBtn').onclick=()=>{if(state.shares<1){toast('No tienes acciones para vender');return}state.shares--;state.cash+=state.price;save();toast('Has vendido 1 acción de KD')};
+$('detailsBtn').onclick=()=>toast('KD · Kerbin Dynamics · Sector aeroespacial · Empresa ficticia');
+document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(b.dataset.view+'View').classList.add('active')});
+// Small simulated market movement every 20 seconds while the page is open.
+setInterval(()=>{const old=state.price;state.price=Math.max(80,Math.min(180,+(state.price*(1+(Math.random()-.46)*.018)).toFixed(2)));state.history.push(state.price);if(state.history.length>24)state.history.shift();const pct=(state.price/old-1)*100;$('stockChange').textContent=`${pct>=0?'+':''}${pct.toFixed(2)}%`;$('stockChange').className=pct>=0?'positive':'negative';save()},20000);
+updateUI();
