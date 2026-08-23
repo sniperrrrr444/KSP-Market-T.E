@@ -1,0 +1,17 @@
+{
+  "updatedAt": null,
+  "source": "Discord + daily news analysis",
+  "marketSentiment": 0,
+  "news": [],
+  "companies": [
+    {
+      "ticker": "KD",
+      "name": "Kerbin Dynamics",
+      "sector": "Aeroespacial",
+      "price": 125.4,
+      "previousClose": 125.4,
+      "dailyChange": 0,
+      "signal": "NEUTRAL"
+    }
+  ]
+}
