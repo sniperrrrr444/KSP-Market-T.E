@@ -1,4 +1,4 @@
-"""KSP Exchange daily market updater.
+"""KSP Market T/E daily market updater.
 
 Reads the latest messages from a Discord channel using a bot token stored in
 DISCORD_BOT_TOKEN. Messages can contain a ticker, a manual percentage and/or
@@ -24,7 +24,7 @@ NEGATIVE = {"failure", "failed", "loss", "losses", "delay", "delayed", "crash", 
 
 def discord_messages():
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=50"
-    req = Request(url, headers={"Authorization": f"Bot {TOKEN}", "User-Agent": "KSP-Exchange/1.0"})
+    req = Request(url, headers={"Authorization": f"Bot {TOKEN}", "User-Agent": "KSP-Market-TE/1.0"})
     with urlopen(req, timeout=20) as r:
         return json.load(r)
 
