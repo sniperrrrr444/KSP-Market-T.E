@@ -1,4 +1,4 @@
-name: KSP Exchange daily market update
+name: KSP Market T/E — daily market update
 
 on:
   schedule:
@@ -21,8 +21,8 @@ jobs:
         run: python3 ksp-stock-market/discord-market-bot.py
       - name: Commit market data
         run: |
-          git config user.name "KSP Exchange Bot"
+          git config user.name "KSP Market T/E Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ksp-stock-market/market-data.json
-          git diff --cached --quiet || git commit -m "chore: daily KSP market update"
+          git diff --cached --quiet || git commit -m "chore: daily KSP Market T/E update"
           git push
