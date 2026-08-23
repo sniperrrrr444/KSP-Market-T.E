@@ -3,53 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Mercado bursátil ficticio del universo KSP">
-  <title>KSP Exchange — Mercado de acciones</title>
+  <meta name="description" content="KSP Exchange — bolsa ficticia impulsada por eventos y noticias de Kerbin">
+  <title>KSP Exchange — Kerbin Stock Market</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><span class="brand-mark">K</span><div><strong>KSP Exchange</strong><small>Kerbin Stock Market</small></div></div>
-    <nav>
-      <button class="nav-btn active" data-view="market">Mercado</button>
-      <button class="nav-btn" data-view="portfolio">Mi cartera</button>
-    </nav>
-    <div class="account-area">
-      <span id="balanceLabel">Demo · 10.000 ₡</span>
-      <button id="accountBtn" class="account-btn">Iniciar sesión</button>
-    </div>
+    <nav><button class="nav-btn active" data-view="market">Mercado</button><button class="nav-btn" data-view="portfolio">Mi cartera</button><button class="nav-btn" data-view="news">Noticias</button><button class="nav-btn" data-view="store">Almacén Online</button></nav>
+    <div class="account-area"><span id="balanceLabel">Demo · 10.000 ₡</span><button id="accountBtn" class="account-btn">Iniciar sesión</button></div>
   </header>
-
   <main>
     <section id="marketView" class="view active">
-      <div class="hero">
-        <div><p class="eyebrow">KSP · MERCADO SIMULADO</p><h1>Invierte en el futuro de Kerbin.</h1><p>Una bolsa ficticia para tu universo KSP. Sin dinero real y preparada para añadir empresas más adelante.</p></div>
-        <div class="market-status"><span class="dot"></span> Mercado abierto <small>Datos simulados</small></div>
-      </div>
-
-      <div class="stats"><div><span>Índice KSP</span><strong id="indexValue">1.000,00</strong><em id="indexChange">+0,00%</em></div><div><span>Volumen 24h</span><strong>128.450 ₡</strong><em>Simulado</em></div><div><span>Empresas</span><strong>1</strong><em>Solo demo</em></div></div>
-
-      <div class="section-heading"><div><p class="eyebrow">ACCIONES</p><h2>Empresas disponibles</h2></div><span class="pill">1 ficticia</span></div>
-      <article class="stock-card" id="stockCard">
-        <div class="stock-main"><div class="ticker">KD</div><div><h3>Kerbin Dynamics</h3><p>Fabricación aeroespacial · Empresa ficticia</p></div></div>
-        <div class="price"><strong id="stockPrice">₡125,40</strong><span id="stockChange" class="positive">+2,84%</span></div>
-        <div class="sparkline-wrap"><canvas id="chart" width="500" height="120" aria-label="Gráfico simulado de Kerbin Dynamics"></canvas></div>
-        <div class="stock-actions"><button class="secondary" id="detailsBtn">Ver detalles</button><button class="buy" id="buyBtn">Comprar</button></div>
-      </article>
-      <p class="disclaimer">KD / Kerbin Dynamics es una empresa inventada para probar la plataforma. Los precios, saldos y operaciones son simulados.</p>
+      <div class="hero"><div><p class="eyebrow">KSP · MERCADO SIMULADO</p><h1>Invierte en el futuro de Kerbin.</h1><p>Las cotizaciones reaccionan a las valoraciones de Discord y a las noticias del día.</p></div><div class="market-status"><span class="dot"></span> <span id="marketStatus">Mercado conectado</span><small id="lastUpdate">Esperando actualización</small></div></div>
+      <div class="stats"><div><span>Índice KSP</span><strong id="indexValue">1.000,00</strong><em id="indexChange">0,00%</em></div><div><span>Sentimiento del día</span><strong id="sentiment">Neutral</strong><em>Discord + noticias</em></div><div><span>Empresas</span><strong id="companyCount">1</strong><em>Preparado para crecer</em></div></div>
+      <div class="section-heading"><div><p class="eyebrow">ACCIONES</p><h2>Empresas disponibles</h2></div><span class="pill">Mercado ficticio</span></div>
+      <article class="stock-card" id="stockCard"><div class="stock-main"><div class="ticker">KD</div><div><h3>Kerbin Dynamics</h3><p>Fabricación aeroespacial · Empresa ficticia</p></div></div><div class="price"><strong id="stockPrice">₡125,40</strong><span id="stockChange" class="positive">0,00%</span></div><div class="sparkline-wrap"><canvas id="chart" width="500" height="120"></canvas></div><div class="stock-actions"><button class="secondary" id="detailsBtn">Ver detalles</button><button class="buy" id="buyBtn">Comprar</button></div></article>
+      <div class="event-card"><div><p class="eyebrow">MOTOR DE MERCADO</p><h3>¿Por qué ha cambiado KD?</h3><p id="marketReason">Las noticias y valoraciones de Discord aparecerán aquí cada día.</p></div><span id="signalBadge" class="pill">NEUTRAL</span></div>
+      <p class="disclaimer">Todo es ficticio: no representa cotizaciones reales, no usa dinero real y no es asesoramiento financiero.</p>
     </section>
-
-    <section id="portfolioView" class="view">
-      <div class="page-title"><p class="eyebrow">MI CUENTA</p><h1>Mi cartera</h1><p>Gestiona tu saldo y tus posiciones dentro de la simulación.</p></div>
-      <div class="portfolio-grid"><div class="balance-card"><span>Patrimonio total</span><strong id="portfolioTotal">10.000,00 ₡</strong><small>Saldo disponible: <b id="portfolioCash">10.000,00 ₡</b></small></div><div class="position-card"><div><span>Posición · KD</span><h3>Kerbin Dynamics</h3></div><div><strong id="shares">0</strong><small>acciones</small></div><div><strong id="positionValue">0,00 ₡</strong><small>valor actual</small></div><button class="buy" id="portfolioBuy">Comprar</button><button class="sell" id="sellBtn">Vender</button></div></div>
-    </section>
+    <section id="portfolioView" class="view"><div class="page-title"><p class="eyebrow">MI CUENTA</p><h1>Mi cartera</h1><p>Gestiona tu saldo y tus posiciones dentro de la simulación.</p></div><div class="portfolio-grid"><div class="balance-card"><span>Patrimonio total</span><strong id="portfolioTotal">10.000,00 ₡</strong><small>Saldo disponible: <b id="portfolioCash">10.000,00 ₡</b></small></div><div class="position-card"><div><span>Posición · KD</span><h3>Kerbin Dynamics</h3></div><div><strong id="shares">0</strong><small>acciones</small></div><div><strong id="positionValue">0,00 ₡</strong><small>valor actual</small></div><button class="buy" id="portfolioBuy">Comprar</button><button class="sell" id="sellBtn">Vender</button></div></div></section>
+    <section id="newsView" class="view"><div class="page-title"><p class="eyebrow">KERBIN NEWSWIRE</p><h1>Noticias del día</h1><p>Eventos publicados en el canal de Discord que pueden influir en el mercado.</p></div><div id="newsList" class="news-list"><p class="muted">Cargando noticias…</p></div></section>
+    <section id="storeView" class="view"><div class="page-title"><p class="eyebrow">KSP MARKETPLACE</p><h1>Almacén Online</h1><p>Productos y servicios ficticios de las empresas del mercado.</p></div><div class="store-grid"><article class="product-card"><span class="pill">DEMO</span><h3>Motor KD-1</h3><p>Motor experimental de Kerbin Dynamics para futuras misiones.</p><strong>2.450 ₡</strong><button class="buy full" disabled>Próximamente</button></article><article class="product-card"><span class="pill">FUTURO</span><h3>Catálogo de empresas</h3><p>Cuando añadamos nuevas compañías, sus productos aparecerán automáticamente aquí.</p><strong>—</strong><button class="secondary full" disabled>Sin productos</button></article></div></section>
   </main>
-
-  <div id="authModal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><div id="authContent"><p class="eyebrow">KSP EXCHANGE</p><h2>Crear cuenta</h2><p class="muted">Cuenta local de demostración. No se envían datos a ningún servidor.</p><form id="registerForm"><label>Nombre de usuario<input id="username" required minlength="3" maxlength="20" autocomplete="username"></label><label>Contraseña<input id="password" type="password" required minlength="4" autocomplete="new-password"></label><button class="buy full" type="submit">Registrarme</button></form><p class="switch">¿Ya tienes cuenta? <button id="showLogin" type="button">Inicia sesión</button></p></div></div></div>
-
+  <div id="authModal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><div id="authContent"><p class="eyebrow">KSP EXCHANGE</p><h2>Crear cuenta</h2><p class="muted">Cuenta local de demostración.</p><form id="registerForm"><label>Nombre de usuario<input id="username" required minlength="3" maxlength="20"></label><label>Contraseña<input id="password" type="password" required minlength="4"></label><button class="buy full" type="submit">Registrarme</button></form><p class="switch">¿Ya tienes cuenta? <button id="showLogin" type="button">Inicia sesión</button></p></div></div></div>
   <div id="tradeModal" class="modal hidden"><div class="modal-box small"><button class="close" id="closeTrade">×</button><p class="eyebrow">OPERACIÓN SIMULADA</p><h2>Comprar KD</h2><p>Kerbin Dynamics · <strong id="modalPrice">₡125,40</strong> por acción</p><label>Número de acciones<input id="quantity" type="number" min="1" max="1000" value="1"></label><div class="trade-total">Total: <strong id="tradeTotal">₡125,40</strong></div><button class="buy full" id="confirmBuy">Confirmar compra</button></div></div>
-
-  <div id="toast" class="toast"></div>
-  <script src="./app.js"></script>
+  <div id="toast" class="toast"></div><script src="./app.js"></script>
 </body>
 </html>
