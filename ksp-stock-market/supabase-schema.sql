@@ -18,11 +18,7 @@ create policy "public companies read" on public.companies for select using(activ
 insert into public.companies(ticker,name,description,sector,price,previous_close) values('KD','Kerbin Dynamics','Fabricación aeroespacial de Kerbin. Empresa ficticia de prueba.','Aeroespacial',125.40,125.40) on conflict(ticker) do nothing;
 
 create or replace function public.place_market_order(p_company uuid,p_side text,p_quantity bigint)
-returns jsonb
-language plpgsql
-security definer
-set search_path=public
-as $$
+returns jsonb language plpgsql security definer set search_path=public as $$
 declare c public.companies%rowtype; p public.profiles%rowtype; h public.holdings%rowtype; execution_price numeric(18,2); total numeric(18,2); impact numeric; new_price numeric(18,2);
 begin
  if auth.uid() is null then raise exception 'Not authenticated'; end if;
@@ -56,7 +52,21 @@ $$;
 
 grant execute on function public.place_market_order(uuid,text,bigint) to authenticated;
 
--- Realtime publication. If these tables were already added, PostgreSQL will report that harmlessly; the trading RPC itself remains valid.
+-- Atomic ticker wrapper: the browser no longer needs a separate companies lookup before trading.
+create or replace function public.place_market_order_by_ticker(p_ticker text,p_side text,p_quantity bigint)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare cid uuid;
+begin
+ if auth.uid() is null then raise exception 'Not authenticated'; end if;
+ select id into cid from public.companies where ticker=upper(trim(p_ticker)) and active=true limit 1;
+ if cid is null then raise exception 'Company not found: %', upper(trim(p_ticker)); end if;
+ return public.place_market_order(cid,p_side,p_quantity);
+end;
+$$;
+
+grant execute on function public.place_market_order_by_ticker(text,text,bigint) to authenticated;
+
+-- Realtime publication.
 do $$ begin
  if not exists(select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='companies') then alter publication supabase_realtime add table public.companies; end if;
  if not exists(select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='price_history') then alter publication supabase_realtime add table public.price_history; end if;
