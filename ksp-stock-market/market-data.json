@@ -3,11 +3,22 @@
   "source": "Discord + daily news analysis",
   "marketSentiment": 0,
   "news": [],
+  "processedMessageIds": [],
   "companies": [
     {
       "ticker": "KD",
       "name": "Kerbin Dynamics",
       "sector": "Aeroespacial",
+      "keywords": [
+        "Kerbin Dynamics",
+        "Kerbin",
+        "Dynamics",
+        "aeroespacial"
+      ],
+      "aliases": [
+        "KD"
+      ],
+      "people": [],
       "price": 125.4,
       "previousClose": 125.4,
       "dailyChange": 0,
