@@ -8,6 +8,8 @@
     let mode='signup',handling=false;
     const toast=m=>{const t=document.getElementById('toast');if(t){t.textContent=m;t.classList.add('show');clearTimeout(window.__authToast);window.__authToast=setTimeout(()=>t.classList.remove('show'),3500)}};
     const setMode=login=>{mode=login?'login':'signup';title.textContent=login?'Iniciar sesión':'Crear cuenta';submit.textContent=login?'Entrar':'Crear cuenta';wrap.style.display=login?'none':'block';toggle.textContent=login?'Crear una cuenta →':'Ya tengo cuenta → Iniciar sesión';};
+    window.setAuthMode=setMode;
+    window.openAuth=function(login=false){setMode(!!login);modal.classList.remove('hidden');setTimeout(()=>{(login?email:username)?.focus?.();},50);};
     toggle.addEventListener('click',e=>{e.preventDefault();if(!handling)setMode(mode!=='login');});
     form.addEventListener('submit',async e=>{
       e.preventDefault();e.stopImmediatePropagation();if(handling)return;
