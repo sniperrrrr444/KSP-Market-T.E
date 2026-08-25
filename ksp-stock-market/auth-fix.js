@@ -1,45 +1,145 @@
-/* KSP Market T/E — single, resilient authentication bridge. */
+/* KSP Market T/E — authentication controller. Single capture handler prevents duplicate auth flows. */
 (function(){
-  function boot(){
-    const form=document.getElementById('authForm'),email=document.getElementById('email'),password=document.getElementById('password'),username=document.getElementById('username'),submit=document.getElementById('authSubmit'),modal=document.getElementById('authModal'),toggle=document.getElementById('toggleAuth'),title=document.getElementById('authTitle'),wrap=document.getElementById('usernameWrap');
-    if(!form||!window.supabase||!window.KSP_SUPABASE)return;
-    const client=window.supabaseClient||window.supabase.createClient(window.KSP_SUPABASE.url,window.KSP_SUPABASE.anonKey);
-    window.supabaseClient=client;
-    let mode='signup',handling=false;
-    const toast=m=>{const t=document.getElementById('toast');if(t){t.textContent=m;t.classList.add('show');clearTimeout(window.__authToast);window.__authToast=setTimeout(()=>t.classList.remove('show'),3500)}};
-    const setMode=login=>{mode=login?'login':'signup';title.textContent=login?'Iniciar sesión':'Crear cuenta';submit.textContent=login?'Entrar':'Crear cuenta';wrap.style.display=login?'none':'block';toggle.textContent=login?'Crear una cuenta →':'Ya tengo cuenta → Iniciar sesión';};
+  const boot=()=>{
+    const form=document.getElementById('authForm');
+    const email=document.getElementById('email');
+    const password=document.getElementById('password');
+    const username=document.getElementById('username');
+    const submit=document.getElementById('authSubmit');
+    const modal=document.getElementById('authModal');
+    const toggle=document.getElementById('toggleAuth');
+    const title=document.getElementById('authTitle');
+    const wrap=document.getElementById('usernameWrap');
+    if(!form||!email||!password||!submit||!modal||!toggle||!title||!wrap)return;
+
+    let mode='signup';
+    let busy=false;
+
+    const getClient=()=>{
+      if(window.supabaseClient)return window.supabaseClient;
+      const cfg=window.KSP_SUPABASE||{};
+      if(!window.supabase||!cfg.url||!cfg.anonKey)return null;
+      window.supabaseClient=window.supabase.createClient(cfg.url,cfg.anonKey);
+      return window.supabaseClient;
+    };
+    const toast=(message)=>{
+      const t=document.getElementById('toast');
+      if(!t)return;
+      t.textContent=message;
+      t.classList.add('show');
+      clearTimeout(window.__kspAuthToast);
+      window.__kspAuthToast=setTimeout(()=>t.classList.remove('show'),4000);
+    };
+    const setMode=(login)=>{
+      mode=login?'login':'signup';
+      title.textContent=login?'Iniciar sesión':'Crear cuenta';
+      submit.textContent=login?'Entrar':'Crear cuenta';
+      wrap.style.display=login?'none':'block';
+      toggle.textContent=login?'Crear una cuenta →':'Ya tengo cuenta → Iniciar sesión';
+      submit.disabled=false;
+    };
+    const open=(login)=>{
+      setMode(!!login);
+      modal.classList.remove('hidden');
+      setTimeout(()=>email.focus(),60);
+    };
+    window.openAuth=open;
     window.setAuthMode=setMode;
-    window.openAuth=function(login=false){setMode(!!login);modal.classList.remove('hidden');setTimeout(()=>{(login?email:username)?.focus?.();},50);};
-    toggle.addEventListener('click',e=>{e.preventDefault();if(!handling)setMode(mode!=='login');});
-    form.addEventListener('submit',async e=>{
-      e.preventDefault();e.stopImmediatePropagation();if(handling)return;
-      const em=email.value.trim(),pw=password.value;
-      if(!em||!pw)return toast('Introduce email y contraseña.');
-      handling=true;submit.disabled=true;submit.textContent=mode==='login'?'Entrando…':'Creando…';
+
+    toggle.addEventListener('click',(event)=>{
+      event.preventDefault();
+      event.stopPropagation();
+      if(!busy)setMode(mode!=='login');
+    });
+
+    /* Capture at document level: this runs BEFORE app.js's old submit handler. */
+    document.addEventListener('submit',async(event)=>{
+      if(event.target!==form)return;
+      event.preventDefault();
+      event.stopPropagation();
+      if(event.stopImmediatePropagation)event.stopImmediatePropagation();
+      if(busy)return;
+
+      const em=email.value.trim().toLowerCase();
+      const pw=password.value;
+      if(!em||!pw){toast('Introduce email y contraseña.');return;}
+      if(pw.length<6){toast('La contraseña debe tener al menos 6 caracteres.');return;}
+
+      const client=getClient();
+      if(!client){toast('El backend online todavía no está disponible.');return;}
+
+      busy=true;
+      submit.disabled=true;
+      submit.textContent=mode==='login'?'Entrando…':'Creando…';
+
       try{
         if(mode==='login'){
-          const result=await Promise.race([client.auth.signInWithPassword({email:em,password:pw}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('La conexión con el servidor tardó demasiado.')),10000))]);
+          const result=await Promise.race([
+            client.auth.signInWithPassword({email:em,password:pw}),
+            new Promise((_,reject)=>setTimeout(()=>reject(new Error('La conexión con Supabase tardó demasiado.')),12000))
+          ]);
           if(result.error)throw result.error;
-          if(!result.data?.session)throw new Error('Supabase no devolvió una sesión.');
-          window.supabaseClient=client;window.session=result.data.session;window.online=true;window.profileName=result.data.user?.user_metadata?.username||em.split('@')[0];
-          modal.classList.add('hidden');
+          const newSession=result.data?.session;
+          if(!newSession)throw new Error('Supabase no devolvió una sesión. Comprueba que el correo y la contraseña sean correctos.');
+
+          window.session=newSession;
+          window.online=true;
+          window.profileName=newSession.user?.user_metadata?.username||newSession.user?.user_metadata?.display_name||em.split('@')[0];
           if(typeof setAccountUI==='function')setAccountUI();
           if(typeof update==='function')update();
-          toast('Sesión iniciada como '+(window.profileName||'Usuario'));
-          try{if(typeof loadProfile==='function')await Promise.race([loadProfile(),new Promise((_,rej)=>setTimeout(()=>rej(new Error('perfil lento')),5000))]);}catch(err){console.warn('Perfil tras login:',err);}
-          if(typeof setAccountUI==='function')setAccountUI();if(typeof update==='function')update();
+          modal.classList.add('hidden');
+          toast('Sesión iniciada como '+window.profileName);
+
+          /* Profile loading is deliberately secondary: it can never block login. */
+          if(typeof loadProfile==='function'){
+            Promise.race([
+              loadProfile(),
+              new Promise((_,reject)=>setTimeout(()=>reject(new Error('perfil lento')),6000))
+            ]).catch(err=>console.warn('KSP: perfil tras login:',err));
+          }
           return;
         }
-        const name=(username.value||em.split('@')[0]).trim();
-        if(name.length<3)return toast('El nombre de usuario debe tener al menos 3 caracteres.');
+
+        const name=(username?.value||em.split('@')[0]).trim();
+        if(name.length<3){toast('El nombre de usuario debe tener al menos 3 caracteres.');return;}
+        if(name.length>20){toast('El nombre de usuario no puede superar 20 caracteres.');return;}
+
         const result=await client.auth.signUp({email:em,password:pw});
-        if(result.error)throw result.error;if(!result.data?.user)throw new Error('Supabase no creó el usuario.');
-        const {error:pe}=await client.from('profiles').upsert({id:result.data.user.id,username:name,display_name:name},{onConflict:'id'});if(pe)throw pe;
-        if(result.data.session){window.supabaseClient=client;window.session=result.data.session;window.online=true;window.profileName=name;modal.classList.add('hidden');if(typeof setAccountUI==='function')setAccountUI();if(typeof update==='function')update();toast('Cuenta creada como '+name);try{if(typeof loadProfile==='function')await Promise.race([loadProfile(),new Promise((_,rej)=>setTimeout(()=>rej(new Error('perfil lento')),5000))]);}catch(err){console.warn('Perfil tras registro:',err);}if(typeof setAccountUI==='function')setAccountUI();if(typeof update==='function')update();}else{modal.classList.add('hidden');toast('Cuenta creada. Revisa tu email para confirmar la cuenta.');}
-      }catch(err){console.error('KSP auth error',err);toast(err?.message||'No se pudo completar la operación.');}
-      finally{handling=false;submit.disabled=false;submit.textContent=mode==='login'?'Entrar':'Crear cuenta';}
+        if(result.error)throw result.error;
+        if(!result.data?.user)throw new Error('Supabase no creó el usuario.');
+
+        const {error:profileError}=await client.from('profiles').upsert({
+          id:result.data.user.id,
+          username:name,
+          display_name:name
+        },{onConflict:'id'});
+        if(profileError)throw new Error('Cuenta creada, pero no se pudo crear el perfil: '+profileError.message);
+
+        if(result.data.session){
+          window.session=result.data.session;
+          window.online=true;
+          window.profileName=name;
+          if(typeof setAccountUI==='function')setAccountUI();
+          if(typeof update==='function')update();
+          modal.classList.add('hidden');
+          toast('Cuenta creada como '+name);
+        }else{
+          modal.classList.add('hidden');
+          toast('Cuenta creada. Revisa tu email para confirmar la cuenta.');
+        }
+      }catch(error){
+        console.error('KSP authentication error:',error);
+        toast(error?.message||'No se pudo completar el inicio de sesión.');
+      }finally{
+        busy=false;
+        submit.disabled=false;
+        submit.textContent=mode==='login'?'Entrar':'Crear cuenta';
+      }
     },true);
+
     setMode(false);
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,900));else setTimeout(boot,900);
+  };
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,300));
+  else setTimeout(boot,300);
 })();
