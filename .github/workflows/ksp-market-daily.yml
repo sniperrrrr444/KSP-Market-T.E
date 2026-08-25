@@ -1,8 +1,10 @@
 name: KSP Market T/E — Discord market update
 
 on:
+  # Near-real-time 24/7 polling. This is not a persistent Discord Gateway
+  # process; GitHub Actions wakes every five minutes and processes only new IDs.
   schedule:
-    - cron: '10 22 * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 # Never let two market updates modify market-data.json at the same time.
@@ -20,8 +22,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Update market from Discord
+      - name: Update market from new Discord messages
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           DISCORD_CHANNEL_ID: "1458963575367270602"
@@ -29,14 +33,14 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: python3 -u ksp-stock-market/discord-market-bot.py
 
-      - name: Commit market data
+      - name: Commit market data when changed
         run: |
           git config user.name "KSP Market T/E Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ksp-stock-market/market-data.json
           if git diff --cached --quiet; then
-            echo "No market-data changes to commit."
-            exit 0
+            echo "No new market events."
+          else
+            git commit -m "chore: update KSP Market T/E from Discord"
+            git push
           fi
-          git commit -m "chore: update KSP Market T/E from Discord"
-          git push
