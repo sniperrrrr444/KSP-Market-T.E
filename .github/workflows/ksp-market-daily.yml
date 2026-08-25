@@ -5,25 +5,38 @@ on:
     - cron: '10 22 * * *'
   workflow_dispatch:
 
+# Never let two market updates modify market-data.json at the same time.
+concurrency:
+  group: ksp-market-discord-update
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
   update-market:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Update market from Discord
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           DISCORD_CHANNEL_ID: "1458963575367270602"
           DISCORD_GUILD_ID: "1458940977224876310"
-        run: python3 ksp-stock-market/discord-market-bot.py
+          PYTHONUNBUFFERED: "1"
+        run: python3 -u ksp-stock-market/discord-market-bot.py
+
       - name: Commit market data
         run: |
           git config user.name "KSP Market T/E Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ksp-stock-market/market-data.json
-          git diff --cached --quiet || git commit -m "chore: update KSP Market T/E from Discord"
+          if git diff --cached --quiet; then
+            echo "No market-data changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: update KSP Market T/E from Discord"
           git push
