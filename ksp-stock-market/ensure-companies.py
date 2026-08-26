@@ -17,6 +17,7 @@ COMPANIES = [
         "keywords": ["Kerbin Dynamics", "Kerbin", "Dynamics", "aeroespacial"],
         "aliases": ["KD"],
         "people": [],
+        "relatedMembers": [],
         "history": [118, 119, 117, 121, 120, 122, 124, 123, 125, 124, 126, 125.4],
     },
     {
@@ -28,9 +29,10 @@ COMPANIES = [
         "previousPrice": 100.00,
         "dailyChange": 0,
         "signal": "NEUTRAL",
-        "keywords": ["JS Aerospace", "JS Aerospace", "J.S. Aerospace", "JSA", "aerospace", "aeroespacial"],
+        "keywords": ["JS Aerospace", "J.S. Aerospace", "JSA", "aerospace", "aeroespacial"],
         "aliases": ["JSA", "JS Aerospace", "J.S. Aerospace"],
-        "people": ["Agus"],
+        "people": [],
+        "relatedMembers": ["Agus"],
         "history": [100, 100, 100, 100, 100, 100, 100],
     },
 ]
