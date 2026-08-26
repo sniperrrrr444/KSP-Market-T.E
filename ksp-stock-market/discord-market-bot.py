@@ -1,9 +1,10 @@
 """KSP Market T/E Discord market processor.
 
 Only new Discord messages can affect the fictional market. A message must
-match a listed company's configured name, alias, keyword or related person.
-The matched message is then scored using local context, phrases, negation and
-intensifiers. Processed message IDs are persisted so reruns are idempotent.
+match a listed company's configured name, alias, keyword, related person, or
+be authored by a configured related Discord member. The matched message is
+then scored using local context, phrases, negation and intensifiers.
+Processed message IDs are persisted so reruns are idempotent.
 """
 import json
 import os
@@ -70,7 +71,7 @@ def normalise(text):
 def discord_request(url):
     req = Request(url, headers={
         "Authorization": f"Bot {TOKEN}",
-        "User-Agent": "KSP-Market-TE/4.0",
+        "User-Agent": "KSP-Market-TE/5.0",
     })
     try:
         with urlopen(req, timeout=20) as response:
@@ -79,10 +80,7 @@ def discord_request(url):
         if exc.code == 401:
             raise RuntimeError("Discord 401: token inválido o revocado.") from exc
         if exc.code == 403:
-            raise RuntimeError(
-                "Discord 403: el bot no puede leer el canal. "
-                "Necesita Ver canal + Leer historial de mensajes y acceso al servidor."
-            ) from exc
+            raise RuntimeError("Discord 403: el bot no puede leer el canal. Necesita Ver canal + Leer historial de mensajes y acceso al servidor.") from exc
         if exc.code == 404:
             raise RuntimeError("Discord 404: canal inexistente o inaccesible para el bot.") from exc
         raise RuntimeError(f"Discord HTTP {exc.code}: error leyendo el canal.") from exc
@@ -91,7 +89,6 @@ def discord_request(url):
 
 
 def discord_messages(processed):
-    """Fetch several pages so a busy channel does not silently lose events."""
     messages = []
     before = None
     for _ in range(MAX_HISTORY_PAGES):
@@ -119,11 +116,22 @@ def company_terms(company):
     return [normalise(str(term)) for term in terms if str(term).strip()]
 
 
-def message_matches_company(text, company):
+def author_terms(message):
+    author = message.get("author", {}) or {}
+    return {
+        normalise(str(author.get("username", ""))),
+        normalise(str(author.get("global_name", ""))),
+        normalise(str(author.get("display_name", ""))),
+    } - {""}
+
+
+def message_matches_company(text, message, company):
     clean = normalise(text)
     padded = f" {clean} "
-    matches = [term for term in company_terms(company) if term and f" {term} " in padded]
-    return matches
+    content_matches = [term for term in company_terms(company) if term and f" {term} " in padded]
+    configured_members = [normalise(str(item)) for item in company.get("relatedMembers", []) if str(item).strip()]
+    member_matches = [term for term in configured_members if term in author_terms(message)]
+    return content_matches + [f"member:{term}" for term in member_matches]
 
 
 def sentiment_score(text):
@@ -137,7 +145,6 @@ def sentiment_score(text):
     for phrase, value in NEGATIVE_PHRASES.items():
         if f" {phrase} " in padded:
             score += value
-
     for index, word in enumerate(words):
         value = POSITIVE.get(word, NEGATIVE.get(word, 0.0))
         if not value:
@@ -147,7 +154,6 @@ def sentiment_score(text):
             value *= -1
         multiplier = max([1.0] + [INTENSIFIERS[item] for item in context if item in INTENSIFIERS])
         score += value * multiplier
-
     return max(-1.0, min(1.0, score / 5.0))
 
 
@@ -172,10 +178,8 @@ def main():
     data.setdefault("processedMessageIds", [])
     data.setdefault("news", [])
     data.setdefault("companies", [])
-
     processed = {str(item) for item in data["processedMessageIds"]}
-    messages = discord_messages(processed)
-    messages = sorted(messages, key=lambda item: item.get("timestamp", ""))
+    messages = sorted(discord_messages(processed), key=lambda item: item.get("timestamp", ""))
     new_processed, relevant_news, market_scores = [], [], []
 
     for msg in messages:
@@ -189,7 +193,7 @@ def main():
 
         matched_companies = []
         for company in data["companies"]:
-            matches = message_matches_company(content, company)
+            matches = message_matches_company(content, msg, company)
             if matches:
                 matched_companies.append((company, matches))
         if not matched_companies:
@@ -202,12 +206,10 @@ def main():
             pct = round(score * 5.0, 2)
             if explicit_ticker == ticker and explicit_pct is not None:
                 pct = max(-15.0, min(15.0, explicit_pct))
-
             signal = "UP" if pct > 0 else "DOWN" if pct < 0 else "NEUTRAL"
             if pct:
                 apply_company_change(company, pct)
                 market_scores.append(score)
-
             relevant_news.append({
                 "id": message_id,
                 "ticker": ticker,
@@ -225,7 +227,6 @@ def main():
     if market_scores:
         data["marketSentiment"] = round(sum(market_scores) / len(market_scores), 3)
     data["updatedAt"] = datetime.now(timezone.utc).isoformat()
-
     with open(DATA_FILE, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=2)
         file.write("\n")
