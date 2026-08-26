@@ -25,15 +25,15 @@ COMPANIES = [
         "name": "JS Aerospace",
         "description": "Compañía aeroespacial de Kerbin centrada en vehículos, estaciones y tecnología espacial.",
         "sector": "Aeroespacial",
-        "price": 100.00,
-        "previousPrice": 100.00,
+        "price": 20.00,
+        "previousPrice": 20.00,
         "dailyChange": 0,
         "signal": "NEUTRAL",
         "keywords": ["JS Aerospace", "J.S. Aerospace", "JSA", "aerospace", "aeroespacial"],
         "aliases": ["JSA", "JS Aerospace", "J.S. Aerospace"],
         "people": [],
         "relatedMembers": ["Agus"],
-        "history": [100, 100, 100, 100, 100, 100, 100],
+        "history": [20, 20, 20, 20, 20, 20, 20],
     },
 ]
 
