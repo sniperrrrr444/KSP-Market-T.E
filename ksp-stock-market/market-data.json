@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-30T21:27:41.571127+00:00",
+  "updatedAt": "2026-08-31T00:00:00.000000+00:00",
   "source": "Discord + daily news analysis",
   "marketSentiment": 0,
   "news": [],
@@ -537,11 +537,25 @@
       ],
       "people": [],
       "price": 125.4,
-      "previousClose": 125.4,
+      "previousPrice": 125.4,
       "dailyChange": 0,
       "signal": "NEUTRAL",
       "description": "Fabricación aeroespacial de Kerbin. Empresa ficticia de prueba.",
-      "relatedMembers": []
+      "relatedMembers": [],
+      "history": [
+        118,
+        119,
+        117,
+        121,
+        120,
+        122,
+        124,
+        123,
+        125,
+        124,
+        126,
+        125.4
+      ]
     },
     {
       "ticker": "JSA",
