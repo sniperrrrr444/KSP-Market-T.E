@@ -1,0 +1,32 @@
+name: KSP Market T/E — smoke tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate JSON
+        run: python3 -m json.tool ksp-stock-market/market-data.json >/dev/null
+      - name: Validate Python
+        run: python3 -m py_compile ksp-stock-market/discord-market-bot.py ksp-stock-market/ensure-companies.py
+      - name: Validate JavaScript syntax
+        run: |
+          node --check ksp-stock-market/app.js
+          node --check ksp-stock-market/auth-final.js
+          node --check ksp-stock-market/fixes.js
+          node --check ksp-stock-market/launch-hardening.js
+          node --check ksp-stock-market/multi-company.js
+          node --check ksp-stock-market/stability-v3.js
+      - name: Run smoke checks
+        run: node tests/smoke-check.mjs
