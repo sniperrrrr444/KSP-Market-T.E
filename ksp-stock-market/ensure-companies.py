@@ -52,16 +52,25 @@ for configured in COMPANIES:
         print(f"Added company {configured['ticker']}: {configured['name']}")
         continue
     for key, value in configured.items():
-        if key in {"price", "previousPrice", "dailyChange", "signal", "history"}:
+        # No sobrescribir precios ni historial en vivo
+        if key in {"price", "previousPrice", "dailyChange", "signal", "history", "lastChange", "lastEventAt"}:
             continue
         if existing.get(key) != value:
             existing[key] = value
             changed = True
+    # Normalizar previousPrice si solo existe previousClose
+    if "previousPrice" not in existing and "previousClose" in existing:
+        existing["previousPrice"] = existing["previousClose"]
+        changed = True
+    if "previousPrice" not in existing:
+        existing["previousPrice"] = existing.get("price", 0)
+        changed = True
 
 if changed:
     data["companies"] = companies
     with DATA_FILE.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
+    print("Company configuration updated.")
 else:
     print("Company configuration already up to date.")
